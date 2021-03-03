@@ -12,7 +12,6 @@ from plugwise.exceptions import (
     XMLDataMissingError,
 )
 from plugwise.smile import Smile
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -45,8 +44,6 @@ from .const import (
     SENSOR_PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,9 +139,9 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if single_master_thermostat is None:
         platforms = SENSOR_PLATFORMS
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -163,8 +160,8 @@ async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS_GATEWAY
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS_GATEWAY
             ]
         )
     )
@@ -206,7 +203,6 @@ class SmileGateway(CoordinatorEntity):
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
-
         device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},
             "name": self._entity_name,

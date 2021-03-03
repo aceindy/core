@@ -21,7 +21,6 @@ import homeassistant.helpers.config_validation as cv
 
 from .activity import ActivityStream
 from .const import (
-    AUGUST_COMPONENTS,
     CONF_ACCESS_TOKEN_CACHE_FILE,
     CONF_INSTALL_ID,
     CONF_LOGIN_METHOD,
@@ -32,6 +31,7 @@ from .const import (
     DOMAIN,
     LOGIN_METHODS,
     MIN_TIME_BETWEEN_DETAIL_UPDATES,
+    PLATFORMS,
     VERIFICATION_CODE_KEY,
 )
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
@@ -43,17 +43,22 @@ _LOGGER = logging.getLogger(__name__)
 TWO_FA_REVALIDATE = "verify_configurator"
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_INSTALL_ID): cv.string,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_INSTALL_ID): cv.string,
+                    vol.Optional(
+                        CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                    ): cv.positive_int,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -132,9 +137,9 @@ async def async_setup_august(hass, config_entry, august_gateway):
 
     await hass.data[DOMAIN][entry_id][DATA_AUGUST].async_setup()
 
-    for component in AUGUST_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -204,8 +209,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in AUGUST_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import history
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
@@ -139,7 +140,9 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): vol.Any(
-            cv.entity_domain(SENSOR_DOMAIN), cv.entity_domain(BINARY_SENSOR_DOMAIN)
+            cv.entity_domain(SENSOR_DOMAIN),
+            cv.entity_domain(BINARY_SENSOR_DOMAIN),
+            cv.entity_domain(INPUT_NUMBER_DOMAIN),
         ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_FILTERS): vol.All(
@@ -197,7 +200,15 @@ class SensorFilter(Entity):
     @callback
     def _update_filter_sensor_state(self, new_state, update_ha=True):
         """Process device state changes."""
-        if new_state is None or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state is None:
+            _LOGGER.warning(
+                "While updating filter %s, the new_state is None", self._name
+            )
+            self._state = None
+            self.async_write_ha_state()
+            return
+
+        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             self._state = new_state.state
             self.async_write_ha_state()
             return
@@ -218,7 +229,11 @@ class SensorFilter(Entity):
                     return
                 temp_state = filtered_state
         except ValueError:
-            _LOGGER.error("Could not convert state: %s to number", self._state)
+            _LOGGER.error(
+                "Could not convert state: %s (%s) to number",
+                new_state.state,
+                type(new_state.state),
+            )
             return
 
         self._state = temp_state.state
@@ -425,7 +440,7 @@ class Filter:
         """Implement a common interface for filters."""
         fstate = FilterState(new_state)
         if self._only_numbers and not isinstance(fstate.state, Number):
-            raise ValueError
+            raise ValueError(f"State <{fstate.state}> is not a Number")
 
         filtered = self._filter_state(fstate)
         filtered.set_precision(self.precision)

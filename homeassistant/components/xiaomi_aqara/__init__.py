@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
@@ -26,7 +27,6 @@ from homeassistant.util.dt import utcnow
 from .const import (
     CONF_INTERFACE,
     CONF_KEY,
-    CONF_PROTOCOL,
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
@@ -188,9 +188,9 @@ async def async_setup_entry(
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -208,8 +208,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in platforms
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in platforms
             ]
         )
     )

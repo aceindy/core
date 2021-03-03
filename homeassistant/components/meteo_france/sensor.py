@@ -29,6 +29,8 @@ from .const import (
     ENTITY_ICON,
     ENTITY_NAME,
     ENTITY_UNIT,
+    MANUFACTURER,
+    MODEL,
     SENSOR_TYPES,
 )
 
@@ -93,6 +95,17 @@ class MeteoFranceSensor(CoordinatorEntity):
     def name(self):
         """Return the name."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
+            "name": self.coordinator.name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "entry_type": "service",
+        }
 
     @property
     def state(self):
@@ -180,7 +193,6 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
 class MeteoFranceAlertSensor(MeteoFranceSensor):
     """Representation of a Meteo-France alert sensor."""
 
-    # pylint: disable=super-init-not-called
     def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
         """Initialize the Meteo-France sensor."""
         super().__init__(sensor_type, coordinator)

@@ -3,6 +3,7 @@ import copy
 import datetime
 from datetime import timedelta
 import json
+from unittest.mock import Mock, patch
 
 import hatasmota
 from hatasmota.utils import (
@@ -31,7 +32,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.async_mock import Mock, patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_SENSOR_CONFIG = {
@@ -274,6 +274,12 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == "20.0"
+
+    # Test force update flag
+    entity = hass.data["entity_components"]["sensor"].get_entity(
+        "sensor.tasmota_status"
+    )
+    assert entity.force_update
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])

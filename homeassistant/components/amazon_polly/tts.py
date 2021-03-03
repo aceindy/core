@@ -6,6 +6,7 @@ import botocore
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
+from homeassistant.const import ATTR_CREDENTIALS, CONF_PROFILE_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -13,8 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_REGION = "region_name"
 CONF_ACCESS_KEY_ID = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
-CONF_PROFILE_NAME = "profile_name"
-ATTR_CREDENTIALS = "credentials"
 
 DEFAULT_REGION = "us-east-1"
 SUPPORTED_REGIONS = [
@@ -42,6 +41,7 @@ CONF_SAMPLE_RATE = "sample_rate"
 CONF_TEXT_TYPE = "text_type"
 
 SUPPORTED_VOICES = [
+    "Olivia",  # Female, Australian, Neural
     "Zhiyu",  # Chinese
     "Mads",
     "Naja",  # Danish
