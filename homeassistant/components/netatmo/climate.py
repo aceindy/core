@@ -2,6 +2,7 @@
 import logging
 from typing import List, Optional
 
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -25,6 +26,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -81,6 +83,7 @@ NETATMO_MAP_PRESET = {
     STATE_NETATMO_AWAY: PRESET_AWAY,
     STATE_NETATMO_OFF: STATE_NETATMO_OFF,
     STATE_NETATMO_MANUAL: STATE_NETATMO_MANUAL,
+    STATE_NETATMO_HOME: PRESET_SCHEDULE,
 }
 
 HVAC_MAP_NETATMO = {
@@ -111,8 +114,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
 
-    if not home_data:
-        return
+    if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
+        raise PlatformNotReady
 
     async def get_entities():
         """Retrieve Netatmo entities."""
@@ -150,6 +153,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
+
+    await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME, None)
 
     platform = entity_platform.current_platform.get()
 
@@ -247,7 +252,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Handle webhook events."""
         data = event["data"]
 
-        if not data.get("home"):
+        if data.get("home") is None:
             return
 
         home = data["home"]
@@ -414,7 +419,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
 
@@ -565,7 +570,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 schedule_id = sid
 
         if not schedule_id:
-            _LOGGER.error("You passed an invalid schedule")
+            _LOGGER.error(
+                "%s is not a invalid schedule", kwargs.get(ATTR_SCHEDULE_NAME)
+            )
             return
 
         self._data.switch_home_schedule(home_id=self._home_id, schedule_id=schedule_id)
@@ -582,7 +589,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return {**super().device_info, "suggested_area": self._room_data["name"]}
 
 
-def interpolate(batterylevel, module_type):
+def interpolate(batterylevel: int, module_type: str) -> int:
     """Interpolate battery level depending on device type."""
     na_battery_levels = {
         NA_THERM: {
@@ -624,7 +631,7 @@ def interpolate(batterylevel, module_type):
     return int(pct)
 
 
-def get_all_home_ids(home_data):
+def get_all_home_ids(home_data: pyatmo.HomeData) -> List[str]:
     """Get all the home ids returned by NetAtmo API."""
     if home_data is None:
         return []

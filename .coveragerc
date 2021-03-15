@@ -386,7 +386,13 @@ omit =
     homeassistant/components/hikvisioncam/switch.py
     homeassistant/components/hisense_aehw4a1/*
     homeassistant/components/hitron_coda/device_tracker.py
-    homeassistant/components/hive/*
+    homeassistant/components/hive/__init__.py
+    homeassistant/components/hive/climate.py
+    homeassistant/components/hive/binary_sensor.py
+    homeassistant/components/hive/light.py
+    homeassistant/components/hive/sensor.py
+    homeassistant/components/hive/switch.py
+    homeassistant/components/hive/water_heater.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
     homeassistant/components/home_connect/*
@@ -629,8 +635,6 @@ omit =
     homeassistant/components/netatmo/__init__.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
-    homeassistant/components/netatmo/climate.py
-    homeassistant/components/netatmo/const.py
     homeassistant/components/netatmo/data_handler.py
     homeassistant/components/netatmo/helper.py
     homeassistant/components/netatmo/light.py
@@ -725,6 +729,7 @@ omit =
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/media_player.py
+    homeassistant/components/philips_js/remote.py
     homeassistant/components/pi_hole/sensor.py
     homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
     homeassistant/components/pi4ioe5v9xxxx/switch.py
@@ -784,6 +789,7 @@ omit =
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py
+    homeassistant/components/recorder/repack.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
@@ -1166,3 +1172,6 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
+
+    # TYPE_CHECKING block is never executed during pytest run
+    if TYPE_CHECKING:
